@@ -3,6 +3,7 @@ package ru.quipy.api
 import ru.quipy.core.annotations.DomainEvent
 import ru.quipy.domain.Event
 import java.util.UUID
+import javax.annotation.meta.TypeQualifierNickname
 
 
 const val PROJECT_CREATED_EVENT = "PROJECT_CREATED_EVENT"
@@ -24,6 +25,8 @@ class ProjectCreatedEvent(
 class ParticipantAddedEvent(
         val projectId: UUID,
         val userId: UUID,
+        val nickname: String,
+        val username: String,
         createdAt: Long = System.currentTimeMillis(),
 ) : Event<ProjectAggregate>(
         name = PARTICIPANT_ADDED_EVENT,
