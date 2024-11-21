@@ -30,12 +30,15 @@ import ru.quipy.logic.command.changeTaskStatusPosition
 import ru.quipy.logic.command.deleteStatus
 import ru.quipy.logic.state.ProjectAggregateState
 import ru.quipy.logic.state.TaskAndStatusAggregateState
+import ru.quipy.projections.AllTasksViewDomain
+import ru.quipy.projections.AllTasksViewService
 import java.util.UUID
 
 @RestController
 class TaskController(
         val tasksEsService: EventSourcingService<UUID, TaskAndStatusAggregate, TaskAndStatusAggregateState>,
         val projectEsService: EventSourcingService<UUID, ProjectAggregate, ProjectAggregateState>,
+        val taskService: AllTasksViewService
 ) {
     @PostMapping("projects/{projectId}/task/{taskId}/executors")
     fun addExecutor(
@@ -153,6 +156,32 @@ class TaskController(
         return tasksEsService.update(projectId) {
             it.changeTaskStatusPosition(statusId, position)
         }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @GetMapping("/get/{taskId}")
+    fun getById(@PathVariable taskId: UUID): AllTasksViewDomain.Task? {
+        return taskService.getTask(taskId)
+    }
+
+
+
+    @GetMapping("/getAllUsers")
+    fun getAll(): List<AllTasksViewDomain.Task>? {
+        return taskService.getAll();
     }
 }
 

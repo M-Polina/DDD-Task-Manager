@@ -20,14 +20,17 @@ import ru.quipy.logic.command.createStatus
 import ru.quipy.logic.state.ProjectAggregateState
 import ru.quipy.logic.state.TaskAndStatusAggregateState
 import ru.quipy.logic.state.UserAggregateState
+import ru.quipy.projections.*
 import java.util.*
 
 @RestController
 @RequestMapping("/projects")
 class ProjectController(
-        val projectEsService: EventSourcingService<UUID, ProjectAggregate, ProjectAggregateState>,
-        val taskEsService: EventSourcingService<UUID, TaskAndStatusAggregate, TaskAndStatusAggregateState>,
-        val userEsService: EventSourcingService<UUID, UserAggregate, UserAggregateState>
+    val projectEsService: EventSourcingService<UUID, ProjectAggregate, ProjectAggregateState>,
+    val taskEsService: EventSourcingService<UUID, TaskAndStatusAggregate, TaskAndStatusAggregateState>,
+    val userEsService: EventSourcingService<UUID, UserAggregate, UserAggregateState>,
+    val allProjectsViewService: AllProjectsViewService,
+    val userProjectViewService: UserProjectViewService,
 ) {
     @PostMapping("/{projectId}/participants")
     fun addParticipant(
@@ -36,7 +39,7 @@ class ProjectController(
     ): ParticipantAddedEvent {
         val user = userEsService.getState(userId) ?: throw NotFoundException("User $userId wasn't not found.")
 
-        return projectEsService.update(projectId) { it.addParticipantById(userId = userId) }
+        return projectEsService.update(projectId) { it.addParticipantById(userId = userId, nickname = user.getNickname(), name = user.getName()) }
     }
 
     @PostMapping("/create")
@@ -54,7 +57,7 @@ class ProjectController(
         }
 
         projectEsService.update(response.projectId) {
-            it.addParticipantById(userId = creatorId)
+            it.addParticipantById(userId = creatorId, nickname = user.getNickname(), name = user.getName())
         }
 
         return response
@@ -64,6 +67,24 @@ class ProjectController(
     fun getProject(@PathVariable projectId: UUID): ProjectAggregateState? {
         return projectEsService.getState(projectId)
     }
+
+    @GetMapping("/getProject/{projectId}")
+    fun getProjectById(@PathVariable projectId: UUID): AllProjectsViewDomain.Project? {
+        return allProjectsViewService.getProject(projectId)
+    }
+
+
+
+    @GetMapping("/getAllProjects")
+    fun getAllProjects(): List<AllProjectsViewDomain.Project>? {
+        return allProjectsViewService.getAllProjects();
+    }
+
+    @GetMapping("/getAllUserProjects")
+    fun getAllUserProjects(): List<UserProjectViewDomain.UserProject>? {
+        return userProjectViewService.getAll();
+    }
 }
 
 //dee44b85-21fc-4b2c-b19d-277a31938ad7
+
